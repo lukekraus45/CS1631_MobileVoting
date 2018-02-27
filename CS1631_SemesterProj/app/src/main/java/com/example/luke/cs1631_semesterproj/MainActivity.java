@@ -68,8 +68,8 @@ public class MainActivity extends AppCompatActivity {
                 //setup TextMessage Feature
                 try {
                     SmsManager sms = SmsManager.getDefault();
-                    //change to admin number
-                    sms.sendTextMessage("8143350802", null, "Text Messaging Opened", null, null);
+                    //change to admin's phone number
+                    sms.sendTextMessage("5705752207", null, "Text Messaging Opened", null, null);
 
                 }catch (Exception e){
                     Log.e(TAG, e.toString());
@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "BUTTON 3 PRESSED!!!!!!!!!!!!!!!!!!!");
                 b3.setEnabled(false);
                 b3.setText("Final Results Sent...See Below");
+                acceptTexts = false;
                 ArrayList<Integer> indexList = new ArrayList<Integer>();
                 int max_votes = 0;
                 StringBuilder results = new StringBuilder();
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
 
 
                 if(indexList.size() == 1){
-                    results.append("\n\n\n\nPoster Number " + indexList.get(0) + " wins with " + max_votes + " votes!");
+                    results.append("\n\n\nPoster Number " + indexList.get(0) + " wins with " + max_votes + " votes!");
                     Log.e(TAG, "Poster Number " + indexList.get(0) + " wins with " + max_votes + " votes!");
                 }else{
                     for(int i = 0; i < indexList.size(); i++){
@@ -110,6 +111,14 @@ public class MainActivity extends AppCompatActivity {
                 }
                 tv.setText(results.toString());
 
+                try { //text the winning poster ID to the admin
+                    SmsManager sms = SmsManager.getDefault();
+                    //change to admin's phone number
+                    sms.sendTextMessage("5705752207", null, results.toString(), null, null);
+
+                }catch (Exception e){
+                    Log.e(TAG, e.toString());
+                }
 
             }
         });
@@ -127,16 +136,37 @@ public class MainActivity extends AppCompatActivity {
             }catch(Exception e){
                 Log.e(TAG, "Exception "  + e);
             }
-            if(vote_number > 0 && vote_number <= NUMBER_OF_POSTERS){//valid vote
+
+            if (voteList.containsKey(from)) { //invalid vote: duplicate voter
+                Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: DUPLICATE COTE");
+                acknowlegde(from, "You have already voted before. This vote will not be counted.");
+            } else if(vote_number > 0 && vote_number <= NUMBER_OF_POSTERS){ //valid vote
                 voteCounter[vote_number-1] = voteCounter[vote_number-1] + 1;//increase the counter
                 voteList.put(from, vote_number);
-            }else{
-                Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE");
+                String acceptVote = String.format("You voted for number " + vote_number + ". Thanks! You will not be able to vote again.");
+                acknowlegde(from, acceptVote);
+            }else{ //invalid vote: not a valid poster ID
+                Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: INVALID POSTER ID");
+                //send msg 711 sayingi its an invalid vote (the candidate ID does not exist)
+                acknowlegde(from, "This is an invalid vote. Please vote for a valid poster ID.");
             }
+
+        } else {
+            Log.e(TAG, "AN ERROR OCCURED: TOO MANY CHARACTERS OR MAYBE SOMETHING ELSE");
+            acknowlegde(from, "This is an invalid message.");
         }
 
 
 
+    }
+
+    private void acknowlegde (String recipient, String ackMsg) {
+        try {
+            SmsManager smsManager = SmsManager.getDefault();
+            smsManager.sendTextMessage(recipient, null, ackMsg, null, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
