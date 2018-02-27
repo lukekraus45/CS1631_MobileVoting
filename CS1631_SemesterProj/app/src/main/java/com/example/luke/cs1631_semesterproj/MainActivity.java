@@ -7,13 +7,21 @@ import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
-
-
+    final int NUMBER_OF_POSTERS = 50; //change this val to the number of posters there are
+    HashMap<String, Integer> voteList = new HashMap<String, Integer>();
+    int[] voteCounter = new int[NUMBER_OF_POSTERS];
     private String TAG = "TEST";
     private static MainActivity ma;
     boolean acceptTexts = false;
@@ -37,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
         final Button b1 = (Button) findViewById(R.id.button);
         final Button b2 = (Button) findViewById(R.id.button2);
         final Button b3 = (Button) findViewById(R.id.button3);
+        final TextView tv = (TextView) findViewById(R.id.textView);
+
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -73,6 +83,33 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "BUTTON 3 PRESSED!!!!!!!!!!!!!!!!!!!");
                 b3.setEnabled(false);
                 b3.setText("Final Results Sent...See Below");
+                ArrayList<Integer> indexList = new ArrayList<Integer>();
+                int max_votes = 0;
+                StringBuilder results = new StringBuilder();
+                for(int i = 0; i < NUMBER_OF_POSTERS; i++) {
+                    if(voteCounter[i] > max_votes){
+                        max_votes = voteCounter[i];
+                        indexList = new ArrayList<Integer>();
+                        indexList.add(i+1);
+                    }else if(voteCounter[i] == max_votes){
+                        indexList.add(voteCounter[i]);
+                    }
+                    results.append("Poster " + (i+1) + ": " + voteCounter[i] + "\n");
+                }
+
+
+
+
+                if(indexList.size() == 1){
+                    results.append("\n\n\n\nPoster Number " + indexList.get(0) + " wins with " + max_votes + " votes!");
+                    Log.e(TAG, "Poster Number " + indexList.get(0) + " wins with " + max_votes + " votes!");
+                }else{
+                    for(int i = 0; i < indexList.size(); i++){
+                        results.append("Poster " + indexList.get(i) + " tied for first receiving " + max_votes + " votes\n");
+                    }
+                }
+                tv.setText(results.toString());
+
 
             }
         });
@@ -80,6 +117,24 @@ public class MainActivity extends AppCompatActivity {
     public void handleSMS(String message, String from){
 
         Log.e(TAG, "MESSAGE RECEIVED FROM " + from + " CONTENT " + message);
+        from = from.substring(1);//remove + at beginning
+        int vote_number = -1;
+        if(message.equals("Text Messaging Opened")){
+            //do nothing...first message
+        }else if(message.length() <= 2){//assuming votes are not going to be longer than 2 characters
+            try{
+                vote_number = Integer.parseInt(message);
+            }catch(Exception e){
+                Log.e(TAG, "Exception "  + e);
+            }
+            if(vote_number > 0 && vote_number <= NUMBER_OF_POSTERS){//valid vote
+                voteCounter[vote_number-1] = voteCounter[vote_number-1] + 1;//increase the counter
+                voteList.put(from, vote_number);
+            }else{
+                Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE");
+            }
+        }
+
 
 
     }

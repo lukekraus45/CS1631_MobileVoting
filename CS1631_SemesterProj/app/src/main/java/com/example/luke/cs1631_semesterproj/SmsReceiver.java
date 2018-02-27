@@ -27,11 +27,11 @@ public class SmsReceiver extends BroadcastReceiver {
             for (int i = 0; i < message.length; i++) {
 
                 SmsMessage temp_message = SmsMessage.createFromPdu((byte[]) message[i]);
-                String from = temp_message.getOriginatingAddress();
                 String body = temp_message.getDisplayMessageBody();
+                String from = temp_message.getOriginatingAddress();
 
                 MainActivity ma = MainActivity.instance();
-                ma.handleSMS(body.toString(),message.toString());
+                ma.handleSMS(body, from);
 
 
             }
