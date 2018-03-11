@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private String TAG = "TEST";
     private static MainActivity ma;
     boolean acceptTexts = false;
+    boolean debug = false;
 
     public static  MainActivity instance(){
         return ma;
@@ -69,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     SmsManager sms = SmsManager.getDefault();
                     //change to admin's phone number
-                    sms.sendTextMessage("5705752207", null, "Text Messaging Opened", null, null);
+                    sms.sendTextMessage("8143350802", null, "Text Messaging Opened", null, null);
 
                 }catch (Exception e){
                     Log.e(TAG, e.toString());
@@ -114,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
                 try { //text the winning poster ID to the admin
                     SmsManager sms = SmsManager.getDefault();
                     //change to admin's phone number
-                    sms.sendTextMessage("5705752207", null, results.toString(), null, null);
+                    sms.sendTextMessage("8143350802", null, results.toString(), null, null);
 
                 }catch (Exception e){
                     Log.e(TAG, e.toString());
@@ -124,37 +125,65 @@ public class MainActivity extends AppCompatActivity {
         });
     }
     public void handleSMS(String message, String from){
+        if(!debug){
+            Log.e(TAG, "MESSAGE RECEIVED FROM " + from + " CONTENT " + message);
+            from = from.substring(1);//remove + at beginning
+            int vote_number = -1;
+            if(message.equals("Text Messaging Opened")){
+                //do nothing...first message
+            }else if(message.length() <= 2){//assuming votes are not going to be longer than 2 characters
+                try{
+                    vote_number = Integer.parseInt(message);
+                }catch(Exception e){
+                    Log.e(TAG, "Exception "  + e);
+                }
 
-        Log.e(TAG, "MESSAGE RECEIVED FROM " + from + " CONTENT " + message);
-        from = from.substring(1);//remove + at beginning
-        int vote_number = -1;
-        if(message.equals("Text Messaging Opened")){
-            //do nothing...first message
-        }else if(message.length() <= 2){//assuming votes are not going to be longer than 2 characters
-            try{
-                vote_number = Integer.parseInt(message);
-            }catch(Exception e){
-                Log.e(TAG, "Exception "  + e);
+                if (voteList.containsKey(from)) { //invalid vote: duplicate voter
+                    Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: DUPLICATE COTE");
+                    acknowlegde(from, "You have already voted before. This vote will not be counted.");
+                } else if(vote_number > 0 && vote_number <= NUMBER_OF_POSTERS){ //valid vote
+                    voteCounter[vote_number-1] = voteCounter[vote_number-1] + 1;//increase the counter
+                    voteList.put(from, vote_number);
+                    String acceptVote = String.format("You voted for number " + vote_number + ". Thanks! You will not be able to vote again.");
+                    acknowlegde(from, acceptVote);
+                }else{ //invalid vote: not a valid poster ID
+                    Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: INVALID POSTER ID");
+                    //send msg 711 sayingi its an invalid vote (the candidate ID does not exist)
+                    acknowlegde(from, "This is an invalid vote. Please vote for a valid poster ID.");
+                }
+
+            } else {
+                Log.e(TAG, "AN ERROR OCCURED: TOO MANY CHARACTERS OR MAYBE SOMETHING ELSE");
+                acknowlegde(from, "This is an invalid message.");
             }
 
-            if (voteList.containsKey(from)) { //invalid vote: duplicate voter
-                Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: DUPLICATE COTE");
-                acknowlegde(from, "You have already voted before. This vote will not be counted.");
-            } else if(vote_number > 0 && vote_number <= NUMBER_OF_POSTERS){ //valid vote
-                voteCounter[vote_number-1] = voteCounter[vote_number-1] + 1;//increase the counter
-                voteList.put(from, vote_number);
-                String acceptVote = String.format("You voted for number " + vote_number + ". Thanks! You will not be able to vote again.");
-                acknowlegde(from, acceptVote);
-            }else{ //invalid vote: not a valid poster ID
-                Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: INVALID POSTER ID");
-                //send msg 711 sayingi its an invalid vote (the candidate ID does not exist)
-                acknowlegde(from, "This is an invalid vote. Please vote for a valid poster ID.");
-            }
+        }else{
+            Log.e(TAG, "MESSAGE RECEIVED FROM " + from + " CONTENT " + message);
+            from = from.substring(1);//remove + at beginning
+            int vote_number = -1;
+            if(message.equals("Text Messaging Opened")){
+                //do nothing...first message
+            }else if(message.length() <= 2){//assuming votes are not going to be longer than 2 characters
+                try{
+                    vote_number = Integer.parseInt(message);
+                }catch(Exception e){
+                    Log.e(TAG, "Exception "  + e);
+                }
 
-        } else {
-            Log.e(TAG, "AN ERROR OCCURED: TOO MANY CHARACTERS OR MAYBE SOMETHING ELSE");
-            acknowlegde(from, "This is an invalid message.");
+                if(vote_number > 0 && vote_number <= NUMBER_OF_POSTERS){ //valid vote
+                    voteCounter[vote_number-1] = voteCounter[vote_number-1] + 1;//increase the counter
+                    voteList.put(from, vote_number);
+                    String acceptVote = String.format("You voted for number " + vote_number + ". Thanks! You will not be able to vote again.");
+                    acknowlegde(from, acceptVote);
+                }else{ //invalid vote: not a valid poster ID
+                    Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: INVALID POSTER ID");
+                    //send msg 711 sayingi its an invalid vote (the candidate ID does not exist)
+                    acknowlegde(from, "This is an invalid vote. Please vote for a valid poster ID.");
+                }
+
+            }
         }
+
 
 
 
