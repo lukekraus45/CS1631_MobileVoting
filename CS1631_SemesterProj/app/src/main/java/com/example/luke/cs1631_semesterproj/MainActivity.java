@@ -19,13 +19,16 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
-    final int NUMBER_OF_POSTERS = 50; //change this val to the number of posters there are
+    final int HIGHEST_POSTER_ID = 50; //change this val to the number of posters there are
     HashMap<String, Integer> voteList = new HashMap<String, Integer>();
-    int[] voteCounter = new int[NUMBER_OF_POSTERS];
+    int[] voteCounter = new int[HIGHEST_POSTER_ID];
     private String TAG = "TEST";
     private static MainActivity ma;
     boolean acceptTexts = false;
     boolean debug = false;
+
+    //added for specific posters
+    private ArrayList<Integer> posterIDs = new ArrayList<>();
 
     public static  MainActivity instance(){
         return ma;
@@ -66,6 +69,14 @@ public class MainActivity extends AppCompatActivity {
                 b2.setText("Text Messages Able to be Received");
                 acceptTexts = true;
 
+                //set up arraylist of valid poster IDs
+                posterIDs.add(2);
+                posterIDs.add(5);
+                posterIDs.add(7);
+                posterIDs.add(8);
+                posterIDs.add(9);
+                posterIDs.add(10);
+
                 //setup TextMessage Feature
                 try {
                     SmsManager sms = SmsManager.getDefault();
@@ -88,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
                 ArrayList<Integer> indexList = new ArrayList<Integer>();
                 int max_votes = 0;
                 StringBuilder results = new StringBuilder();
-                for(int i = 0; i < NUMBER_OF_POSTERS; i++) {
+                for(int i = 0; i < HIGHEST_POSTER_ID; i++) {
                     if(voteCounter[i] > max_votes){
                         max_votes = voteCounter[i];
                         indexList = new ArrayList<Integer>();
@@ -141,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
                 if (voteList.containsKey(from)) { //invalid vote: duplicate voter
                     Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: DUPLICATE COTE");
                     acknowlegde(from, "You have already voted before. This vote will not be counted.");
-                } else if(vote_number > 0 && vote_number <= NUMBER_OF_POSTERS){ //valid vote
+                } else if(vote_number > 0 && vote_number <= HIGHEST_POSTER_ID && posterIDs.contains(vote_number)){ //valid vote
                     voteCounter[vote_number-1] = voteCounter[vote_number-1] + 1;//increase the counter
                     voteList.put(from, vote_number);
                     String acceptVote = String.format("You voted for number " + vote_number + ". Thanks! You will not be able to vote again.");
@@ -154,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
 
             } else {
                 Log.e(TAG, "AN ERROR OCCURED: TOO MANY CHARACTERS OR MAYBE SOMETHING ELSE");
-                acknowlegde(from, "This is an invalid message.");
+                acknowlegde(from, "This is an invalid vote attempt.");
             }
 
         }else{
@@ -170,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, "Exception "  + e);
                 }
 
-                if(vote_number > 0 && vote_number <= NUMBER_OF_POSTERS){ //valid vote
+                if(vote_number > 0 && vote_number <= HIGHEST_POSTER_ID){ //valid vote
                     voteCounter[vote_number-1] = voteCounter[vote_number-1] + 1;//increase the counter
                     voteList.put(from, vote_number);
                     String acceptVote = String.format("You voted for number " + vote_number + ". Thanks! You will not be able to vote again.");
