@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private String TAG = "TEST";
     private static MainActivity ma;
     boolean acceptTexts = false;
-    boolean debug = false;
+    boolean debug = true;
 
     //added for specific posters
     private ArrayList<Integer> posterIDs = new ArrayList<>();
@@ -97,6 +97,10 @@ public class MainActivity extends AppCompatActivity {
                 b3.setText("Final Results Sent...See Below");
                 acceptTexts = false;
                 ArrayList<Integer> indexList = new ArrayList<Integer>();
+                ArrayList<Integer> indexList_second = new ArrayList<Integer>();
+                ArrayList<Integer> indexList_third = new ArrayList<Integer>();
+
+
                 int max_votes = 0;
                 StringBuilder results = new StringBuilder();
                 for(int i = 0; i < HIGHEST_POSTER_ID; i++) {
@@ -110,17 +114,61 @@ public class MainActivity extends AppCompatActivity {
                     results.append("Poster " + (i+1) + ": " + voteCounter[i] + "\n");
                 }
 
+                int winning_vote = max_votes;
+                max_votes = 0;
+                for(int i = 0; i < HIGHEST_POSTER_ID; i++) {
+                    if(voteCounter[i] > max_votes && voteCounter[i] != winning_vote){
+                        max_votes = voteCounter[i];
+                        indexList_second = new ArrayList<Integer>();
+                        indexList_second.add(i+1);
+                    }else if(voteCounter[i] == max_votes){
+                        indexList_second.add(voteCounter[i]);
+                    }
+                    //results.append("Poster " + (i+1) + ": " + voteCounter[i] + "\n");
+                }
+
+                int seond_place = max_votes;
+                max_votes = 0;
+                for(int i = 0; i < HIGHEST_POSTER_ID; i++) {
+                    if(voteCounter[i] > max_votes && voteCounter[i] != winning_vote && voteCounter[i] != seond_place){
+                        max_votes = voteCounter[i];
+                        indexList_third = new ArrayList<Integer>();
+                        indexList_third.add(i+1);
+                    }else if(voteCounter[i] == max_votes){
+                        indexList_third.add(voteCounter[i]);
+                    }
+                    //results.append("Poster " + (i+1) + ": " + voteCounter[i] + "\n");
+                }
+
 
 
 
                 if(indexList.size() == 1){
-                    results.append("\n\n\nPoster Number " + indexList.get(0) + " wins with " + max_votes + " votes!");
-                    Log.e(TAG, "Poster Number " + indexList.get(0) + " wins with " + max_votes + " votes!");
+                    results.append("\n\n\nPoster Number " + indexList.get(0) + " wins with " + winning_vote + " votes!");
+                    Log.e(TAG, "Poster Number " + indexList.get(0) + " wins with " + winning_vote + " votes!");
                 }else{
                     for(int i = 0; i < indexList.size(); i++){
-                        results.append("Poster " + indexList.get(i) + " tied for first receiving " + max_votes + " votes\n");
+                        results.append("Poster " + indexList.get(i) + " tied for first receiving " + winning_vote + " votes\n");
                     }
                 }
+                if(indexList_second.size() == 1){
+                    results.append("\n\n\nPoster Number " + indexList_second.get(0) + " comes in second with  with " + seond_place + " votes!");
+                    Log.e(TAG, "Poster Number " + indexList_second.get(0) + " wins with " + seond_place + " votes!");
+                }else{
+                    for(int i = 0; i < indexList_second.size(); i++){
+                        results.append("Poster " + indexList_second.get(i) + " tied for second receiving " + seond_place + " votes\n");
+                    }
+                }
+                if(indexList_third.size() == 1){
+                    results.append("\n\n\nPoster Number " + indexList_third.get(0) + " comes in third with " + max_votes + " votes!");
+                    Log.e(TAG, "Poster Number " + indexList_third.get(0) + " comes in third with " + max_votes + " votes!");
+                }else{
+                    for(int i = 0; i < indexList_third.size(); i++){
+                        results.append("Poster " + indexList_third.get(i) + " tied for third receiving " + max_votes + " votes\n");
+                    }
+                }
+
+
                 tv.setText(results.toString());
 
                 try { //text the winning poster ID to the admin
