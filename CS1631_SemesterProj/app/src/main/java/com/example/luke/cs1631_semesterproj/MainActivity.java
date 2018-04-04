@@ -1,5 +1,6 @@
 package com.example.luke.cs1631_semesterproj;
 
+import android.content.res.AssetManager;
 import android.nfc.Tag;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,8 +10,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -70,12 +76,7 @@ public class MainActivity extends AppCompatActivity {
                 acceptTexts = true;
 
                 //set up arraylist of valid poster IDs
-                posterIDs.add(2);
-                posterIDs.add(5);
-                posterIDs.add(7);
-                posterIDs.add(8);
-                posterIDs.add(9);
-                posterIDs.add(10);
+
 
                 //setup TextMessage Feature
                 try {
@@ -86,7 +87,39 @@ public class MainActivity extends AppCompatActivity {
                 }catch (Exception e){
                     Log.e(TAG, e.toString());
                 }
+                //test file
+
+                AssetManager am = view.getContext().getAssets();
+                try {
+                    InputStream is = am.open("test.txt");
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                    String line = null;
+                    while((line = reader.readLine()) != null){
+                        InputStream temp_is = am.open(line);
+                        BufferedReader br = new BufferedReader(new InputStreamReader(temp_is));
+
+                        String xmlLine = null;
+                        StringBuilder xmlStringBuilder = new StringBuilder();
+                        while((xmlLine = br.readLine())!= null){
+                            xmlStringBuilder.append(xmlLine +"\n");
+                        }
+                        tv.setText(xmlStringBuilder.toString());
+                    }
+
+                    Log.e(TAG, "READ LINE " + reader.readLine());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+                {
+
+                }
+
+
             }
+
+
         });
 
         b3.setOnClickListener(new View.OnClickListener() {
@@ -187,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
         if(!debug){
             Log.e(TAG, "MESSAGE RECEIVED FROM " + from + " CONTENT " + message);
             from = from.substring(1);//remove + at beginning
+
             int vote_number = -1;
             if(message.equals("Text Messaging Opened")){
                 //do nothing...first message
@@ -200,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
                 if (voteList.containsKey(from)) { //invalid vote: duplicate voter
                     Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: DUPLICATE COTE");
                     acknowlegde(from, "You have already voted before. This vote will not be counted.");
-                } else if(vote_number > 0 && vote_number <= HIGHEST_POSTER_ID && posterIDs.contains(vote_number)){ //valid vote
+                } else if(vote_number > 0 && vote_number <= HIGHEST_POSTER_ID){ //valid vote
                     voteCounter[vote_number-1] = voteCounter[vote_number-1] + 1;//increase the counter
                     voteList.put(from, vote_number);
                     String acceptVote = String.format("You voted for number " + vote_number + ". Thanks! You will not be able to vote again.");
