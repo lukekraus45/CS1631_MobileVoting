@@ -2,6 +2,7 @@ package com.example.luke.cs1631_semesterproj;
 
 import android.content.res.AssetManager;
 import android.nfc.Tag;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.SmsManager;
@@ -10,8 +11,26 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import javax.xml.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -32,6 +51,9 @@ public class MainActivity extends AppCompatActivity {
     private static MainActivity ma;
     boolean acceptTexts = false;
     boolean debug = true;
+    boolean testScript = true;
+    int messageCount = 0;
+    FirebaseDatabase database;
 
     //added for specific posters
     private ArrayList<Integer> posterIDs = new ArrayList<>();
@@ -52,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        database = FirebaseDatabase.getInstance();
+        database.setPersistenceEnabled(true);
         final Button b1 = (Button) findViewById(R.id.button);
         final Button b2 = (Button) findViewById(R.id.button2);
         final Button b3 = (Button) findViewById(R.id.button3);
@@ -88,33 +112,34 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, e.toString());
                 }
                 //test file
+                if(testScript) {
+                    AssetManager am = view.getContext().getAssets();
+                    StringBuilder xmlStringBuilder = new StringBuilder();
+                    try {
+                        //go through all of the files and send them
+                        InputStream is = am.open("test.txt");
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                        String line = null;
+                        while ((line = reader.readLine()) != null) {
+                            InputStream temp_is = am.open(line);
+                            BufferedReader br = new BufferedReader(new InputStreamReader(temp_is));
 
-                AssetManager am = view.getContext().getAssets();
-                try {
-                    InputStream is = am.open("test.txt");
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                    String line = null;
-                    while((line = reader.readLine()) != null){
-                        InputStream temp_is = am.open(line);
-                        BufferedReader br = new BufferedReader(new InputStreamReader(temp_is));
+                            String xmlLine = null;
 
-                        String xmlLine = null;
-                        StringBuilder xmlStringBuilder = new StringBuilder();
-                        while((xmlLine = br.readLine())!= null){
-                            xmlStringBuilder.append(xmlLine +"\n");
+                            while ((xmlLine = br.readLine()) != null) {
+                                xmlStringBuilder.append(xmlLine + "\n");
+                            }
+
+                            br.close();
+                            temp_is.close();
                         }
                         tv.setText(xmlStringBuilder.toString());
+                        Log.e(TAG, "READ LINE " + reader.readLine());
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-
-                    Log.e(TAG, "READ LINE " + reader.readLine());
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
 
-
-                {
-
-                }
 
 
             }
@@ -216,7 +241,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    public void handleSMS(String message, String from){
+    public void handleSMS(String message, String from) throws ParserConfigurationException, TransformerException {
+
+        //701 = success
+        //702 = duplicate vote
+        //703 = invalid vote
+        messageCount++;
+        DatabaseReference ref = database.getReference("Message" + messageCount);
+
         if(!debug){
             Log.e(TAG, "MESSAGE RECEIVED FROM " + from + " CONTENT " + message);
             from = from.substring(1);//remove + at beginning
@@ -233,6 +265,11 @@ public class MainActivity extends AppCompatActivity {
 
                 if (voteList.containsKey(from)) { //invalid vote: duplicate voter
                     Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: DUPLICATE COTE");
+
+
+
+
+
                     acknowlegde(from, "You have already voted before. This vote will not be counted.");
                 } else if(vote_number > 0 && vote_number <= HIGHEST_POSTER_ID){ //valid vote
                     voteCounter[vote_number-1] = voteCounter[vote_number-1] + 1;//increase the counter
@@ -268,6 +305,11 @@ public class MainActivity extends AppCompatActivity {
                     voteList.put(from, vote_number);
                     String acceptVote = String.format("You voted for number " + vote_number + ". Thanks! You will not be able to vote again.");
                     acknowlegde(from, acceptVote);
+                    ref.child("Number").setValue(from);
+                    ref.child("Vote").setValue(message);
+                    ref.child("Code").setValue("702");
+
+
                 }else{ //invalid vote: not a valid poster ID
                     Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: INVALID POSTER ID");
                     //send msg 711 sayingi its an invalid vote (the candidate ID does not exist)
@@ -281,11 +323,64 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+    private void toXml(String Phonenumber, int error_code, String user_vote) throws ParserConfigurationException, TransformerException {
+        try {
+
+            File path = this.getFilesDir();
+            File file = new File(path,"test.xml");
+            DocumentBuilderFactory dbFactory =
+                    DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.newDocument();
+
+            // root element
+            Element rootElement = doc.createElement("cars");
+            doc.appendChild(rootElement);
+
+            // supercars element
+            Element supercar = doc.createElement("supercars");
+            rootElement.appendChild(supercar);
+
+            // setting attribute to element
+            Attr attr = doc.createAttribute("company");
+            attr.setValue("Ferrari");
+            supercar.setAttributeNode(attr);
+
+            // carname element
+            Element carname = doc.createElement("carname");
+            Attr attrType = doc.createAttribute("type");
+            attrType.setValue("formula one");
+            carname.setAttributeNode(attrType);
+            carname.appendChild(doc.createTextNode("Ferrari 101"));
+            supercar.appendChild(carname);
+
+            Element carname1 = doc.createElement("carname");
+            Attr attrType1 = doc.createAttribute("type");
+            attrType1.setValue("sports");
+            carname1.setAttributeNode(attrType1);
+            carname1.appendChild(doc.createTextNode("Ferrari 202"));
+            supercar.appendChild(carname1);
+
+            // write the content into xml file
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource source = new DOMSource(doc);
+            StreamResult result = new StreamResult(file);
+            transformer.transform(source, result);
+
+
+            Log.e(TAG, "HERE");
+        } catch (Exception e) {
+            Log.e(TAG, e.toString());
+            e.printStackTrace();
+        }
+
+    }
 
     private void acknowlegde (String recipient, String ackMsg) {
         try {
             SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(recipient, null, ackMsg, null, null);
+            //smsManager.sendTextMessage(recipient, null, ackMsg, null, null);
         } catch (Exception e) {
             e.printStackTrace();
         }

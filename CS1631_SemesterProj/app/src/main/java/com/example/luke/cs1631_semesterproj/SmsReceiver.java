@@ -7,6 +7,9 @@ import android.os.Bundle;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+
 
 /**
  * Created by Luke on 2/25/2018.
@@ -31,7 +34,13 @@ public class SmsReceiver extends BroadcastReceiver {
                 String from = temp_message.getOriginatingAddress();
 
                 MainActivity ma = MainActivity.instance();
-                ma.handleSMS(body, from);
+                try {
+                    ma.handleSMS(body, from);
+                } catch (ParserConfigurationException e) {
+                    e.printStackTrace();
+                } catch (TransformerException e) {
+                    e.printStackTrace();
+                }
 
 
             }
