@@ -33,9 +33,9 @@ public class SmsReceiver extends BroadcastReceiver {
                 String body = temp_message.getDisplayMessageBody();
                 String from = temp_message.getOriginatingAddress();
 
-                MainActivity ma = MainActivity.instance();
+                ServerActivity sa = ServerActivity.instance();
                 try {
-                    ma.handleSMS(body, from);
+                    sa.handleSMS(body, from);
                 } catch (ParserConfigurationException e) {
                     e.printStackTrace();
                 } catch (TransformerException e) {

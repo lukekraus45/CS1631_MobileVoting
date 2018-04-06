@@ -23,6 +23,9 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".ServerActivity">
+            
+        </activity>
 
         <receiver android:name=".SmsReceiver" android:exported="true">
             <intent-filter>
