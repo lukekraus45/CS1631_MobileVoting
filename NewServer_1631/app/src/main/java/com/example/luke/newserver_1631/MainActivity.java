@@ -18,11 +18,11 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.HashMap;
 import java.util.Map;
 
-
 public class MainActivity extends AppCompatActivity {
     final String TAG = "";
     Button b;
     TextView tv;
+    String value = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,14 +35,24 @@ public class MainActivity extends AppCompatActivity {
         FirebaseDatabase database;
         database = FirebaseDatabase.getInstance();
         database.setPersistenceEnabled(true);
-        DatabaseReference ref = database.getReference().child("Name");
+
+        DatabaseReference myref = database.getReference();
+
         try{
-            ref.addValueEventListener(new ValueEventListener(){
+            myref.addValueEventListener(new ValueEventListener(){
 
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot){
-                    String value = dataSnapshot.getValue(String.class);
+                    for(DataSnapshot item_snapshot : dataSnapshot.getChildren()) {
+
+                        Voter user = item_snapshot.getValue(Voter.class);
+                        user.code = item_snapshot.child("Code").getValue().toString();
+                        user.number = item_snapshot.child("Number").getValue().toString();
+                        user.vote = item_snapshot.child("Vote").getValue().toString();
+                        value += "Code: " + user.code + "... Number: " + user.number + "... Vote: " + user.vote + "\n";
+                    }
                     tv.setText(value);
+
                 }
 
                 @Override
@@ -53,13 +63,11 @@ public class MainActivity extends AppCompatActivity {
 
 
             });
+
+
         }catch (Exception e){
             Log.e(TAG, e.toString());
         }
-
-
-
-
 
 
         b.setOnClickListener(new View.OnClickListener() {
@@ -77,4 +85,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+}
+
+class Voter {
+    String number;
+    String vote;
+    String code;
 }

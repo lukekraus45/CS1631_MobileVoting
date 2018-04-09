@@ -269,24 +269,41 @@ public class ServerActivity extends AppCompatActivity {
                     Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: DUPLICATE COTE");
 
 
-
-
-
                     acknowlegde(from, "You have already voted before. This vote will not be counted.");
+
+                    ref.child("Number").setValue(from);
+                    ref.child("Vote").setValue(message);
+                    ref.child("Code").setValue("Invalid: Duplicate");
+
                 } else if(vote_number > 0 && vote_number <= HIGHEST_POSTER_ID){ //valid vote
                     voteCounter[vote_number-1] = voteCounter[vote_number-1] + 1;//increase the counter
                     voteList.put(from, vote_number);
                     String acceptVote = String.format("You voted for number " + vote_number + ". Thanks! You will not be able to vote again.");
                     acknowlegde(from, acceptVote);
+
+                    ref.child("Number").setValue(from);
+                    ref.child("Vote").setValue(message);
+                    ref.child("Code").setValue("Valid");
+
                 }else{ //invalid vote: not a valid poster ID
                     Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: INVALID POSTER ID");
                     //send msg 711 sayingi its an invalid vote (the candidate ID does not exist)
                     acknowlegde(from, "This is an invalid vote. Please vote for a valid poster ID.");
+
+                    ref.child("Number").setValue(from);
+                    ref.child("Vote").setValue(message);
+                    ref.child("Code").setValue("Invalid: invalid poster ID");
+
                 }
 
             } else {
                 Log.e(TAG, "AN ERROR OCCURED: TOO MANY CHARACTERS OR MAYBE SOMETHING ELSE");
                 acknowlegde(from, "This is an invalid vote attempt.");
+
+                ref.child("Number").setValue(from);
+                ref.child("Vote").setValue(message);
+                ref.child("Code").setValue("Valid");
+
             }
 
         }else{
@@ -307,15 +324,20 @@ public class ServerActivity extends AppCompatActivity {
                     voteList.put(from, vote_number);
                     String acceptVote = String.format("You voted for number " + vote_number + ". Thanks! You will not be able to vote again.");
                     acknowlegde(from, acceptVote);
+
                     ref.child("Number").setValue(from);
                     ref.child("Vote").setValue(message);
-                    ref.child("Code").setValue("702");
+                    ref.child("Code").setValue("Valid");
 
 
                 }else{ //invalid vote: not a valid poster ID
                     Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: INVALID POSTER ID");
                     //send msg 711 sayingi its an invalid vote (the candidate ID does not exist)
                     acknowlegde(from, "This is an invalid vote. Please vote for a valid poster ID.");
+
+                    ref.child("Number").setValue(from);
+                    ref.child("Vote").setValue(message);
+                    ref.child("Code").setValue("Invalid");
                 }
 
             }
