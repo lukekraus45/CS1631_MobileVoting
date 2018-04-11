@@ -79,7 +79,20 @@ public class MainActivity extends AppCompatActivity {
 
         tv = (TextView) findViewById(R.id.password);
         Button b = (Button) findViewById(R.id.button4);
+        Button userMode = (Button) findViewById(R.id.button5);
         Log.e(TAG, "THIS " + this);
+        userMode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Log.e(TAG, tv.getText().toString());
+
+                    Intent getDrawScreenIntent = new Intent(ma, UserMode.class);
+                    startActivity(getDrawScreenIntent);
+
+
+
+            }
+        });
         b.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

@@ -98,7 +98,7 @@ public class ServerActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Log.e(TAG, "BUTTON 2 PRESSED!!!!!!!!!!!!!!!!!!!");
                 b2.setEnabled(false);
-                b2.setText("Text Messages Able to be Received");
+                b2.setText("Messages Able to be Received");
                 acceptTexts = true;
 
                 //set up arraylist of valid poster IDs
@@ -108,7 +108,7 @@ public class ServerActivity extends AppCompatActivity {
                 try {
                     SmsManager sms = SmsManager.getDefault();
                     //change to admin's phone number
-                    sms.sendTextMessage("8143350802", null, "Text Messaging Opened", null, null);
+                    //sms.sendTextMessage("8143350802", null, "Text Messaging Opened", null, null);
 
                 }catch (Exception e){
                     Log.e(TAG, e.toString());
@@ -122,7 +122,7 @@ public class ServerActivity extends AppCompatActivity {
                         InputStream is = am.open("test.txt");
                         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
                         String line = null;
-                        while ((line = reader.readLine()) != null) {
+                        /*while ((line = reader.readLine()) != null) {
                             InputStream temp_is = am.open(line);
                             BufferedReader br = new BufferedReader(new InputStreamReader(temp_is));
 
@@ -135,7 +135,7 @@ public class ServerActivity extends AppCompatActivity {
                             br.close();
                             temp_is.close();
                         }
-                        tv.setText(xmlStringBuilder.toString());
+                        tv.setText(xmlStringBuilder.toString());*/
                         Log.e(TAG, "READ LINE " + reader.readLine());
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -248,9 +248,9 @@ public class ServerActivity extends AppCompatActivity {
         //701 = success
         //702 = duplicate vote
         //703 = invalid vote
-        messageCount++;
-        DatabaseReference ref = database.getReference("Message" + messageCount);
 
+        DatabaseReference ref = database.getReference("Message" + messageCount);
+        messageCount++;
         if(!debug){
             Log.e(TAG, "MESSAGE RECEIVED FROM " + from + " CONTENT " + message);
             from = from.substring(1);//remove + at beginning
@@ -302,7 +302,7 @@ public class ServerActivity extends AppCompatActivity {
 
                 ref.child("Number").setValue(from);
                 ref.child("Vote").setValue(message);
-                ref.child("Code").setValue("Valid");
+                ref.child("Code").setValue("Invalid");
 
             }
 
@@ -347,59 +347,7 @@ public class ServerActivity extends AppCompatActivity {
 
 
     }
-    private void toXml(String Phonenumber, int error_code, String user_vote) throws ParserConfigurationException, TransformerException {
-        try {
 
-            File path = this.getFilesDir();
-            File file = new File(path,"test.xml");
-            DocumentBuilderFactory dbFactory =
-                    DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.newDocument();
-
-            // root element
-            Element rootElement = doc.createElement("cars");
-            doc.appendChild(rootElement);
-
-            // supercars element
-            Element supercar = doc.createElement("supercars");
-            rootElement.appendChild(supercar);
-
-            // setting attribute to element
-            Attr attr = doc.createAttribute("company");
-            attr.setValue("Ferrari");
-            supercar.setAttributeNode(attr);
-
-            // carname element
-            Element carname = doc.createElement("carname");
-            Attr attrType = doc.createAttribute("type");
-            attrType.setValue("formula one");
-            carname.setAttributeNode(attrType);
-            carname.appendChild(doc.createTextNode("Ferrari 101"));
-            supercar.appendChild(carname);
-
-            Element carname1 = doc.createElement("carname");
-            Attr attrType1 = doc.createAttribute("type");
-            attrType1.setValue("sports");
-            carname1.setAttributeNode(attrType1);
-            carname1.appendChild(doc.createTextNode("Ferrari 202"));
-            supercar.appendChild(carname1);
-
-            // write the content into xml file
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
-            DOMSource source = new DOMSource(doc);
-            StreamResult result = new StreamResult(file);
-            transformer.transform(source, result);
-
-
-            Log.e(TAG, "HERE");
-        } catch (Exception e) {
-            Log.e(TAG, e.toString());
-            e.printStackTrace();
-        }
-
-    }
 
     private void acknowlegde (String recipient, String ackMsg) {
         try {
