@@ -12,8 +12,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -55,6 +58,7 @@ public class ServerActivity extends AppCompatActivity {
     boolean testScript = true;
     int messageCount = 0;
     FirebaseDatabase database;
+    Integer[][] dataResults;
 
     //added for specific posters
     private ArrayList<Integer> posterIDs = new ArrayList<>();
@@ -161,7 +165,7 @@ public class ServerActivity extends AppCompatActivity {
                 ArrayList<Integer> indexList_third = new ArrayList<Integer>();
 
 
-                int max_votes = 0;
+/*                int max_votes = 0;
                 StringBuilder results = new StringBuilder();
                 for(int i = 0; i < HIGHEST_POSTER_ID; i++) {
                     if(voteCounter[i] > max_votes){
@@ -238,7 +242,89 @@ public class ServerActivity extends AppCompatActivity {
 
                 }catch (Exception e){
                     Log.e(TAG, e.toString());
+                }*/
+
+
+
+                //initialize results array
+                dataResults = new Integer[100][2];
+                for (int i = 0; i < 100; i++) {
+                    dataResults[i][0] = i;
+                    dataResults[i][1] = 0;
                 }
+
+                DatabaseReference myref = database.getReference();
+
+                try{
+                    myref.addValueEventListener(new ValueEventListener(){
+
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            for(DataSnapshot item_snapshot : dataSnapshot.getChildren()) {
+
+                                Voter user = item_snapshot.getValue(Voter.class);
+                                user.code = item_snapshot.child("Code").getValue().toString();
+                                //user.number = item_snapshot.child("Number").getValue().toString();
+                                user.vote = item_snapshot.child("Vote").getValue().toString();
+                                String temp = user.code;
+
+                                if (temp.equalsIgnoreCase("Valid")) {
+                                    dataResults[Integer.parseInt(user.vote)][1] += 1;
+                                }
+
+                            }
+
+                            //java.util.Arrays.sort(dataResults, java.util.Collections.reverseOrder());
+
+                            Arrays.sort(dataResults, new java.util.Comparator<Integer[]>() {
+                                @Override
+                                //arguments to this method represent the arrays to be sorted
+                                public int compare(Integer[] o1, Integer[] o2) {
+                                    //get the item ids which are at index 0 of the array
+                                    Integer posterNumOne = o1[0];
+                                    Integer posterNumTwo = o2[0];
+                                    // sort on item id
+                                    return posterNumTwo.compareTo(posterNumOne);
+                                }
+                            });
+
+                            // sort array on quantity(second column)
+                            Arrays.sort(dataResults, new java.util.Comparator<Integer[]>() {
+                                @Override
+                                public int compare(Integer[] o1, Integer[] o2) {
+                                    Integer voteCountOne = o1[1];
+                                    Integer voteCountTwo = o2[1];
+                                    // reverse sort on quantity
+                                    return voteCountTwo.compareTo(voteCountOne);
+                                }
+                            });
+
+
+
+
+                            String resultString = "";
+                            resultString = "1st: Poster#" + Integer.toString(dataResults[0][0]) + "(" + Integer.toString(dataResults[0][1]) + ")" +
+                                    "\n2nd: Poster#" + Integer.toString(dataResults[1][0]) + "(" + Integer.toString(dataResults[1][1]) + ")" +
+                                    "\n3rd: Poster# " + Integer.toString(dataResults[2][0]) + "(" + Integer.toString(dataResults[2][1]) + ")";
+                            
+                            tv.setText(resultString);
+
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+
+
+
+                    });
+
+
+                }catch (Exception e){
+                    Log.e(TAG, e.toString());
+                }
+
 
             }
         });
