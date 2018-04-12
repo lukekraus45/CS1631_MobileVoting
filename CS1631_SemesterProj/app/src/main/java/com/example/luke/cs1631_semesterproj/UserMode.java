@@ -1,9 +1,12 @@
 package com.example.luke.cs1631_semesterproj;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.nfc.Tag;
 import android.os.Environment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.SmsManager;
@@ -46,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.TimerTask;
 
 public class UserMode extends AppCompatActivity {
@@ -54,13 +58,13 @@ public class UserMode extends AppCompatActivity {
     HashMap<String, Integer> voteList = new HashMap<String, Integer>();
     int[] voteCounter = new int[HIGHEST_POSTER_ID];
     private String TAG = "TEST";
-    private static ServerActivity sa;
+    private static UserMode um;
     boolean acceptTexts = false;
     boolean debug = true;
     boolean testScript = true;
-    int messageCount = 0;
-    FirebaseDatabase database;
+    long messageCount = 0;
 
+    ArrayList<String> phoneNumbers = new ArrayList<String>();
     //added for specific posters
     private ArrayList<Integer> posterIDs = new ArrayList<>();
 
@@ -68,7 +72,7 @@ public class UserMode extends AppCompatActivity {
     @Override
     public void onStart(){
         super.onStart();
-        //sa = new ServerActivity();
+        um = new UserMode();
 
     }
 
@@ -77,24 +81,59 @@ public class UserMode extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.usermode);
         Intent activityCalled = getIntent();
-        database = FirebaseDatabase.getInstance();
-        database.setPersistenceEnabled(true);
+        final Context context = this;
+
         final Button b1 = (Button) findViewById(R.id.button6);
         final EditText phoneNumber = (EditText) findViewById(R.id.editText);
         final EditText vote = (EditText) findViewById(R.id.editText2);
 
-        b1.setOnClickListener(new View.OnClickListener() {
+
+
+            b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
-                    b1.setEnabled(false);
+                    //b1.setEnabled(false);
 
+                    int vote_num = Integer.parseInt(vote.getText().toString());
+                    if(phoneNumbers.contains(phoneNumber.getText().toString())){
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                        builder.setMessage("You Already Voted!!")
+                                .setCancelable(false)
+                                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        //do things
+                                    }
+                                });
+                        AlertDialog alert = builder.create();
+                        alert.show();
+                    }else if( vote_num< 0|| vote_num >= HIGHEST_POSTER_ID){
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                        builder.setMessage("Invalid Vote!!")
+                                .setCancelable(false)
+                                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        //do things
+                                    }
+                                });
+                        AlertDialog alert = builder.create();
+                        alert.show();
+                    }else{
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                        builder.setMessage("Vote Submitted!")
+                                .setCancelable(false)
+                                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        //do things
+                                    }
+                                });
+                        AlertDialog alert = builder.create();
+                        alert.show();
+                    }
                     handleSMS(vote.getText().toString(), phoneNumber.getText().toString());
 
-                    //SmsManager smsManager = SmsManager.getDefault();
-                    //smsManager.sendTextMessage("8143350802", null, vote.getText().toString(), null, null);
-                    b1.setText("Vote Submitted!");
-
+                    phoneNumber.setText("");
+                    vote.setText("");
                 }catch (Exception e){
                     Log.e(TAG, "EXCEPTION " + e.toString());
                 }
@@ -113,45 +152,51 @@ public class UserMode extends AppCompatActivity {
         //701 = success
         //702 = duplicate vote
         //703 = invalid vote
-        DatabaseReference myref = database.getReference("Counter");
-
-        try{
-            myref.addValueEventListener(new ValueEventListener(){
-
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot){
-                    for(DataSnapshot item_snapshot : dataSnapshot.getChildren()) {
-
-                        String value = item_snapshot.getValue(String.class);
-                        messageCount = Integer.parseInt(value);
 
 
-                    }
-                }
+        Random rand = new Random();
+        messageCount = rand.nextInt(Integer.MAX_VALUE-1) + 1;
+        int vote_number = -1;
+        vote_number = Integer.parseInt(message);
+        //Log.e(TAG, "HERE " + vote_number);
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
+        FirebaseDatabase database;
+        database = FirebaseDatabase.getInstance();
+        //database.setPersistenceEnabled(true);
 
-                }
+        DatabaseReference myref = database.getReference();
 
 
 
-            });
 
-
-            myref.setValue(messageCount);
-        }catch (Exception e){
-            Log.e(TAG, e.toString());
+        for(int i =0; i<phoneNumbers.size(); i++){
+            Log.e(TAG, "Phone Number " + phoneNumbers.get(i));
         }
+        Log.e(TAG, "Phone Number size " + phoneNumbers.size());
 
         DatabaseReference ref = database.getReference("Message" + messageCount);
-        messageCount++;
+        if(phoneNumbers.contains(from)){
+            ref.child("Number").setValue(from);
+            ref.child("Vote").setValue(message);
+            ref.child("Code").setValue("Invalid: Duplicate");
+
+        }else if(vote_number < 0 || vote_number >= HIGHEST_POSTER_ID){
+            ref.child("Number").setValue(from);
+            ref.child("Vote").setValue(message);
+            ref.child("Code").setValue("Invalid: invalid poster ID");
+
+        }else{
+            phoneNumbers.add(from);
+            ref.child("Number").setValue(from);
+            ref.child("Vote").setValue(message);
+            ref.child("Code").setValue("Valid");
+        }
 
 
 
-        if(!debug){
+        /*if(!debug){
             Log.e(TAG, "MESSAGE RECEIVED FROM " + from + " CONTENT " + message);
-            from = from.substring(1);//remove + at beginning
+            //from = from.substring(1);//remove + at beginning
 
             int vote_number = -1;
             if(message.equals("Text Messaging Opened")){
@@ -223,6 +268,7 @@ public class UserMode extends AppCompatActivity {
                     ref.child("Code").setValue("Valid");
 
 
+
                 }else{ //invalid vote: not a valid poster ID
                     Log.e(TAG, "SOME ERROR OCCURED WITH THE VOTE: INVALID POSTER ID");
                     //send msg 711 sayingi its an invalid vote (the candidate ID does not exist)
@@ -233,12 +279,21 @@ public class UserMode extends AppCompatActivity {
                 }
 
             }
-        }
+        }*/
 
 
 
 
     }
 
+
+
 }
+
+class Voter {
+    String number;
+    String vote;
+    String code;
+}
+
 
